@@ -1,8 +1,10 @@
 package com.example.cameraxbasics
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.ImageButton
 import android.widget.Toast
@@ -11,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.io.File
 import java.util.concurrent.ExecutionException
@@ -38,6 +41,9 @@ class MainActivity : AppCompatActivity() {
         toggleFlash = findViewById(R.id.toggleFlash)
         flipCamera = findViewById(R.id.flipCamera)
 
+        ActivityCompat.requestPermissions(this,
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES), 123)
+
         // Camera Permission Request
         if (ContextCompat.checkSelfPermission(
                 this@MainActivity,
@@ -50,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Camera (Front/Back) Switching
-        flipCamera?.setOnClickListener(View.OnClickListener {
+        flipCamera!!.setOnClickListener(View.OnClickListener {
             cameraFacing = if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
                 CameraSelector.LENS_FACING_FRONT
             } else {
@@ -78,10 +84,11 @@ class MainActivity : AppCompatActivity() {
                 capture!!.setOnClickListener {
                     if (ContextCompat.checkSelfPermission(
                             this@MainActivity,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            Manifest.permission.READ_MEDIA_IMAGES
                         ) != PackageManager.PERMISSION_GRANTED
                     ) {
-                        activityResultLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        ActivityCompat.requestPermissions(this,
+                            arrayOf(Manifest.permission.READ_MEDIA_IMAGES), 123)
                     } else {
                         takePicture(imageCapture)
                     }
