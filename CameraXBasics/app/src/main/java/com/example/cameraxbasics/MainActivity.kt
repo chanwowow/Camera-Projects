@@ -1,9 +1,15 @@
 package com.example.cameraxbasics
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.Image
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.provider.MediaStore.Images.Media
 import android.provider.Settings
 import android.view.View
 import android.widget.ImageButton
@@ -25,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     var flipCamera: ImageButton? = null
     private var previewView: PreviewView? = null
     var cameraFacing = CameraSelector.LENS_FACING_BACK
+
     private val activityResultLauncher =
         registerForActivityResult<String, Boolean>(ActivityResultContracts.RequestPermission()) { result ->
             if (result) {
@@ -104,17 +111,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun takePicture(imageCapture: ImageCapture) {
-        val file = File(getExternalFilesDir(null), System.currentTimeMillis().toString() + ".jpg")
-        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(file).build()
+        val fileName = System.currentTimeMillis().toString() + ".jpg"
+        val saveLocation = Environment.DIRECTORY_DCIM + File.separator + "CCAM"
+
+        // Create the directory if it doesn't exist
+        val directory = File(saveLocation)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        val values = ContentValues()
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, saveLocation)
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+
+        val outputFileOptions1 = ImageCapture.OutputFileOptions.Builder(
+            getContentResolver(),
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            values
+        ).build()
+
         imageCapture.takePicture(
-            outputFileOptions,
+            outputFileOptions1,
             Executors.newCachedThreadPool(),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     runOnUiThread {
                         Toast.makeText(
                             this@MainActivity,
-                            "Image saved at: " + file.path,
+                            "Image saved at: ${saveLocation}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -125,13 +150,14 @@ class MainActivity : AppCompatActivity() {
                     runOnUiThread {
                         Toast.makeText(
                             this@MainActivity,
-                            "Failed to save: " + exception.message,
+                            "Failed to save: ${exception.message}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                     startCamera(cameraFacing)
                 }
             })
+
     }
 
     private fun setFlashIcon(camera: Camera) {
