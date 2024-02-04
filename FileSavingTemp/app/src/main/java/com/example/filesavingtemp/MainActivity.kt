@@ -15,6 +15,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         val fileName = "FileName" + System.currentTimeMillis().toString() + ".jpg"
         val saveLocation = Environment.DIRECTORY_PICTURES + File.separator + "My Folder"
         // or you can just write like  {saveLocation = "Pictures/Folder Name"}
+        // If you wanna set dir to DOWNLOADS change like this
+        // DIRECTORY_PICTURES -> DIRECTORY_DOWNLOADS & MediaStore.Images.Media -> MediaStore.Downloads
 
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
@@ -58,19 +61,24 @@ class MainActivity : AppCompatActivity() {
             put(MediaStore.Images.Media.RELATIVE_PATH, saveLocation)
         }
 
-        // If no dir? it creates
-        // Inserts a row into a table at the given URL.
-        val uri = this.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-        // Open an outputStream with the uri
-        val fos = this.contentResolver.openOutputStream(uri!!)
+        try{
+            // If no dir? it creates
+            // Inserts a row into a table at the given URL.
+            val uri = this.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            // Open an outputStream with the uri
+            val fos = this.contentResolver.openOutputStream(uri!!)
 
-        //Write a compressed version of the bitmap to the specified outputstream.
-        bitmapInput.compress(Bitmap.CompressFormat.JPEG, 90, fos!!)
+            //Write a compressed version of the bitmap to the specified outputstream.
+            bitmapInput.compress(Bitmap.CompressFormat.JPEG, 90, fos!!)
 
-        // flush() : Buffer에 있는 모든 data를 출력stream으로 내보냄(=파일에 쓰여짐)
-        // 그러나 이미 위의 compress() 에서 stream에 파일은 기록되었다. 이 코드 flush()는 없어도 되긴함
-        fos.flush()
-        fos.close()
-        Toast.makeText(this, "File saved to $saveLocation", Toast.LENGTH_SHORT).show()
+            // flush() : Buffer에 있는 모든 data를 출력stream으로 내보냄(=파일에 쓰여짐)
+            // 그러나 이미 위의 compress() 에서 stream에 파일은 기록되었다. 이 코드 flush()는 없어도 되긴함
+            fos.flush()
+            fos.close()
+            Toast.makeText(this, "File saved to $saveLocation", Toast.LENGTH_SHORT).show()
+        }catch (e : Exception){
+            val a = e.toString()
+        }
+
     }
 }
